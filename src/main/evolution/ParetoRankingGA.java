@@ -13,34 +13,32 @@ public class ParetoRankingGA {
     private static int elitism; // if elitism is odd number then pick odd population size
     private static int tournamentSize;
     private static double mutationRate;
-    private static int popSize;
 
     private static List<Chromosome> nextCandidates;
     private static List<Chromosome> matingPool;
-    private static List<ParetoFrontier> rankArray;
 
-    public static void init(int aPopSize, double aCrossoverRate, int elitism, int aTournamentSize, double aMutationRate) {
-        ParetoRankingGA.popSize = aPopSize;
+    public static void init(double aCrossoverRate, int elitism, int aTournamentSize, double aMutationRate) {
         ParetoRankingGA.crossoverRate = aCrossoverRate;
         ParetoRankingGA.elitism = elitism;
         ParetoRankingGA.tournamentSize = aTournamentSize;
         ParetoRankingGA.mutationRate = aMutationRate;
         nextCandidates = new ArrayList<>();
         matingPool = new ArrayList<>();
-        rankArray = new ArrayList<>();
     }
 
     public static Population evolve(Population pop) {
-        paretoRanking(pop);
-        // pop is empty at this step
+        GAUtils.paretoRanking(pop); // rank population
+        for (Chromosome fittest: pop.getFittestN(elitism)) {
+            nextCandidates.add(fittest.copy());
+        }
         // mating is empty
-        tournamentRankSelection(); //produce mating pool
+        tournamentRankSelection(pop); // get ra
 
         crossover(); // mating pool is processed during crossover and nextCandidates is filled
         mutate(nextCandidates);
 
         pop = new Population(nextCandidates);
-
+        GAUtils.paretoRanking(pop); // recalculate to get the fittest
         return pop;
     }
 
@@ -51,71 +49,11 @@ public class ParetoRankingGA {
         }
     }
 
-    private static void paretoRanking(Population pop) {
-        //System.out.println("begin pareto ranking");
-        //System.out.println(pop.getSize());
-        rankArray = new ArrayList<>();
-        int currRank = 1;
-        int N = popSize;
-        int m = popSize; // size decreases
-        while (N != 0) {
-            ParetoFrontier frontier = new ParetoFrontier();
-            frontier.rank = new ArrayList<>();
-            // identify frontier
-            for (int i = 0; i < m; i++) {
-                if (nonDominated(pop, pop.get(i))) {
-                    pop.get(i).rank = currRank;
-                    //System.out.println("non-dominated");
-                }
-            }
-            //System.out.println("new frontier identified");
-            // copy to rankArray
-            for (int i = 0; i < m && i < N; i++) {
-                if (pop.get(i).rank == currRank) {
-                    Chromosome nonDominated = pop.remove(i);
-                    frontier.add(nonDominated);
-                    N--;
-                    i--;
-                    //System.out.println("   non-dominated: " + nonDominated);
-                }
-            }
-            //System.out.println("size: " + frontier.size());
-            rankArray.add(frontier);
 
-            currRank++;
-            m = N;
-        }
-    }
 
-    private static boolean nonDominated(Population pop, Chromosome chr) {
-        for (int i = 0; i < pop.getSize(); ++i) { // current population
-            Chromosome temp = pop.get(i);
-            if (temp == chr) {
-                continue;
-            }
-            // if indiv found better than given chr return false
-            if ((temp.getDistance() <= chr.getDistance() && temp.getNumOfRoutes() < chr.getNumOfRoutes()) ||
-                    (temp.getDistance() < chr.getDistance() && temp.getNumOfRoutes() <= chr.getNumOfRoutes())) {
-                // tmp is dominated by temp
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public static void tournamentRankSelection() {
-        Population pop = new Population();
+    public static void tournamentRankSelection(Population pop) {
         matingPool = new ArrayList<>();
-        // fill pop  with processed ranked individuals
-        for (ParetoFrontier r : rankArray) {
-            for (Chromosome c : r.rank) {
-                pop.add(c);
-            }
-        }
-
-        //
-        for (int i = 0; i < popSize; i++) {
+        for (int i = 0; i < pop.getSize(); i++) {
             Population tournament = new Population(tournamentSize);
             // For each place in the tournament get a random candidate tour and add it
             for (int j = 0; j < tournamentSize; j++) {
@@ -136,7 +74,7 @@ public class ParetoRankingGA {
         nextCandidates = new ArrayList<>();
         int candidateSize = matingPool.size();
 
-        for (int k = 0; k < popSize / 2; k++) {
+        for (int k = 0; k < candidateSize / 2; k++) {
             // randomly choose parents from mating pool
             int parent1Index = r.nextInt(candidateSize);
             int parent2Index = r.nextInt(candidateSize);

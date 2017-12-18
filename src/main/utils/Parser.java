@@ -13,7 +13,6 @@ import java.util.Random;
  * Created by rusland on 05.12.17.
  */
 public class Parser {
-
     public static List<Node> parse(String csvFile, int n) {
         List<Node> customers = new ArrayList<>(n);
         for (int i = 0; i < n; ++i) {

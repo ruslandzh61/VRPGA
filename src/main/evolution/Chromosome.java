@@ -10,12 +10,12 @@ import java.util.List;
 /**
  * Created by rusland on 05.12.17.
  */
-public class Chromosome {
+public class Chromosome implements Comparable {
     private List<Integer> customers; // points to VRPGA list of all customers
     private List<Integer> topology; // customers are processed and topology is computed and stored, stores route start idx, point to customers
     private double distance;
     private double fitness;
-    private static boolean isParetoRanking;
+    static boolean isParetoRanking;
     private static double aplha;
     private static double betha;
 
@@ -57,7 +57,9 @@ public class Chromosome {
     }
 
     public Chromosome copy() {
-        return new Chromosome(customers.subList(0, customers.size()));
+        Chromosome c = new Chromosome(customers.subList(0, customers.size()));
+        c.rank = this.rank;
+        return c;
     }
 
     /* no time estimated between two points */
@@ -187,29 +189,34 @@ public class Chromosome {
         if (isParetoRanking) {
             return rank;
         } else if (fitness == 0) {
-            fitness = 1.0 / (getNumOfRoutes() * aplha + getDistance() * betha); // goal then is to minimize fitness
+            fitness = getNumOfRoutes() * aplha + getDistance() * betha; // goal then is to minimize fitness
         }
         return fitness;
     }
 
+    public double calculateDistance() {
+        for (int r = 0; r < topology.size(); ++r) { // points to topology
+                /* points to customers */
+            int startOfRoute = topology.get(r); // points to customers
+            int endOfRoute;
+            if (r + 1 < topology.size()) endOfRoute = topology.get(r + 1) - 1; // start of idx of next route minus 1
+            else endOfRoute = customers.size() - 1; // last customer
+
+            distance += VRPManager.getNode(customers.get(startOfRoute)).distanceTo(VRPManager.getNode(0));
+            //System.out.println(distance + " ");
+            for (int i = startOfRoute; i < endOfRoute; ++i) {
+                distance += VRPManager.getNode(customers.get(i)).distanceTo(VRPManager.getNode(customers.get(i + 1)));
+                //System.out.println(i + " " + distance + " ");
+            }
+            distance += VRPManager.getNode(customers.get(endOfRoute)).distanceTo(VRPManager.getNode(0));
+            //System.out.println(distance + " ");
+        }
+        return distance;
+    }
+
     public double getDistance() {
         if (distance == 0) {
-            for (int r = 0; r < topology.size(); ++r) { // points to topology
-                /* points to customers */
-                int startOfRoute = topology.get(r); // points to customers
-                int endOfRoute;
-                if (r + 1 < topology.size()) endOfRoute = topology.get(r + 1) - 1; // start of idx of next route minus 1
-                else endOfRoute = customers.size() - 1; // last customer
-
-                distance += VRPManager.getNode(customers.get(startOfRoute)).distanceTo(VRPManager.getNode(0));
-                //System.out.println(distance + " ");
-                for (int i = startOfRoute; i < endOfRoute; ++i) {
-                    distance += VRPManager.getNode(customers.get(i)).distanceTo(VRPManager.getNode(customers.get(i + 1)));
-                    //System.out.println(i + " " + distance + " ");
-                }
-                distance += VRPManager.getNode(customers.get(endOfRoute)).distanceTo(VRPManager.getNode(0));
-                //System.out.println(distance + " ");
-            }
+            calculateDistance();
         }
         return distance;
     }
@@ -244,7 +251,7 @@ public class Chromosome {
         return result;
     }
 
-    /*@Override
+    @Override
     public int compareTo(Object o) {
         Chromosome other = (Chromosome) o;
         if (isParetoRanking) {
@@ -264,5 +271,5 @@ public class Chromosome {
                 return 1;
             }
         }
-    }*/
+    }
 }

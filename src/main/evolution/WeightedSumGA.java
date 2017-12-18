@@ -33,8 +33,9 @@ public class WeightedSumGA {
         /* perform elitism operation */
         Population newPop = new Population(pop.getSize());
         int offset = 0;
-        while (offset < elitism) {
-            newPop.set(offset++, pop.getFittest());
+        List<Chromosome> fits = pop.getFittestN(elitism);
+        for (Chromosome fittest: fits) {
+            newPop.set(offset++, fittest.copy());
         }
 
         Random rnd = new Random();
@@ -57,19 +58,13 @@ public class WeightedSumGA {
         }
 
         // mutation
-        for (int i = elitism; i < newPop.getSize(); i ++) {
+        for (int i = elitism; i < newPop.getSize(); i++) {
             if (rnd.nextDouble() < mutationRate) GAUtils.mutate(newPop.get(i));
         }
 
         return newPop;
     }
 
-    public static Population paretoRankingEvolve(Population pop) {
-
-        return pop;
-    }
-
-    /**/
     private static Chromosome[] crossover(Chromosome par1, Chromosome par2) {
         return GAUtils.UOXcrossover(par1, par2);
     }

@@ -1,0 +1,11 @@
+Report: 
+data set: C201_200.csv
+type: narrow window - clustered
+vehicle capacity: 200
+GA parameters: 
+  generation span: 350  population size: 300
+  tournament size: 3
+  elitism: 5
+  crossover rate: 0.8
+  mutation rate: 0.1
+Fitness evaluation: Weighted Sumaplha: 100.0beta: 0.001
