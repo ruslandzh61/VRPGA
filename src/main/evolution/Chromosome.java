@@ -15,18 +15,18 @@ public class Chromosome implements Comparable {
     private List<Integer> topology; // customers are processed and topology is computed and stored, stores route start idx, point to customers
     private double distance;
     private double fitness;
-    static boolean isParetoRanking;
+    static int fitnessType;
     private static double aplha;
     private static double betha;
 
     int rank;
 
-    public static void init(boolean aIsParetoRanking) {
-        Chromosome.isParetoRanking = aIsParetoRanking;
+    public static void init(int aFitnessType) {
+        Chromosome.fitnessType = aFitnessType;
     }
 
-    public static void init(boolean aIsParetoRanking, double aAlpha, double aBetha) {
-        init(aIsParetoRanking);
+    public static void init(int aFitnessType, double aAlpha, double aBetha) {
+        init(aFitnessType);
         Chromosome.aplha = aAlpha;
         Chromosome.betha = aBetha;
     }
@@ -186,7 +186,7 @@ public class Chromosome implements Comparable {
     }*/ // don't include as it may result in violation of problem constraints
 
     public double getFitness() {
-        if (isParetoRanking) {
+        if (fitnessType == 1) { // pareto ranking
             return rank;
         } else if (fitness == 0) {
             fitness = getNumOfRoutes() * aplha + getDistance() * betha; // goal then is to minimize fitness
@@ -254,7 +254,7 @@ public class Chromosome implements Comparable {
     @Override
     public int compareTo(Object o) {
         Chromosome other = (Chromosome) o;
-        if (isParetoRanking) {
+        if (fitnessType == 1) { // pareto ranking
             if(other.rank < this.rank) {
                 return -1;
             } else if(other.rank == this.rank) {

@@ -1,7 +1,5 @@
 package main.evolution;
 
-import main.app.VRPManager;
-
 import java.util.*;
 
 /**
@@ -46,7 +44,7 @@ public class Population {
             return null;
         }
         Chromosome fittest;
-        if (Chromosome.isParetoRanking) {
+        if (Chromosome.fitnessType == 1) { // pareto ranking
             if (frontiers == null || frontiers.isEmpty()) {
                 GAUtils.paretoRanking(this);
             }
@@ -102,7 +100,7 @@ public class Population {
     public List<Chromosome> getFittestN(int n) {
         if (chromosomes.size() < 1) return null;
         Chromosome fittest;
-        if (Chromosome.isParetoRanking) {
+        if (Chromosome.fitnessType == 1) {
             if (frontiers == null || frontiers.isEmpty()) {
                 GAUtils.paretoRanking(this);
             }

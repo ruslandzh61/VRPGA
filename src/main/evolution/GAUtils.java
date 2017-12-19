@@ -3,6 +3,7 @@ package main.evolution;
 import main.utils.Parser;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -79,6 +80,75 @@ public class GAUtils {
         }
 
         return true;
+    }
+
+    private static int getExclusiveRandomNumber(final int high, final int except)
+    {
+        boolean done = false;
+        int getRand = 0;
+
+        while(!done)
+        {
+            getRand = new Random().nextInt(high);
+            if(getRand != except){
+                done = true;
+            }
+        }
+
+        return getRand;
+    }
+
+    public static Chromosome partiallyMappedCrossover(Chromosome thisChromo, Chromosome thatChromo)
+    {
+        int j = 0;
+        int crossPoint1 = 0;
+        int crossPoint2 = 0;
+        int item1 = 0;
+        int item2 = 0;
+        int pos1 = 0;
+        int pos2 = 0;
+        int size = thisChromo.size();
+        Chromosome child = new Chromosome();
+        Random rnd = new Random();
+        crossPoint1 = rnd.nextInt(size - 1);
+        crossPoint2 = getExclusiveRandomNumber(size - 1, crossPoint1);
+        if(crossPoint2 < crossPoint1){
+            j = crossPoint1;
+            crossPoint1 = crossPoint2;
+            crossPoint2 = j;
+        }
+
+        // Copy parentA genes to offspring.
+        for(int i = 0; i < size; i++)
+        {
+            child.set(i, thisChromo.get(i));
+        }
+
+        for(int i = crossPoint1; i <= crossPoint2; i++)
+        {
+            // Get the two items to swap.
+            item1 = thisChromo.get(i);
+            item2 = thatChromo.get(i);
+
+            // Get the items' positions in the offspring.
+            for(int k = 0; k < size; k++)
+            {
+                if(child.get(k) == item1){
+                    pos1 = k;
+                }else if(child.get(k) == item2){
+                    pos2 = k;
+                }
+            } // k
+
+            // Swap them.
+            if(item1 != item2){
+                child.set(pos1, item2);
+                child.set(pos2, item1);
+            }
+
+        }
+
+        return child;
     }
 
     /*public static int[] PMXcrossover(List<Integer> parent1, List<Integer> parent2) {
@@ -173,11 +243,26 @@ public class GAUtils {
         return null;
     }*/
 
-    /*private List<ArrayList<Integer>> removeSelectedElements(List<Integer> custToBeRemoved, Chromosome parent) {
-        List<ArrayList<Integer>> parent =
+    private static List<ArrayList<Integer>> removeSelectedElements(List<Integer> custToBeRemoved, Chromosome parent) {
+        List<ArrayList<Integer>> temporary = new ArrayList<>();
+        for (int i = 0; i < parent.getNumOfRoutes(); ++i) {
+            ArrayList<Integer> tmp = new ArrayList<>();
+            tmp.addAll(parent.getSubRoute(i));
+            for (int j : custToBeRemoved) {
+                if (j == 0) {
+                    continue;
+                }
+                tmp.remove(new Integer(j));
+            }
+            if (!tmp.isEmpty()) {
+                temporary.add(tmp);
+            }
+        }
+        return temporary;
     }
 
-    public void bestRouteCrossover(Chromosome parent1, Chromosome parent2) {
+/*
+    public static Chromosome[] bestRouteCrossover(Chromosome parent1, Chromosome parent2) {
         Random r = new Random();
         Chromosome copyParent1 = parent1.copy();
         Chromosome copyParent2 = parent2.copy();
@@ -194,46 +279,25 @@ public class GAUtils {
         for (int i : copyParent2.getSubRoute(tmp)) {
             keyParent2.add(i);
         }
-//
-//        System.out.println(keyParent1.route);
-//        System.out.println(keyParent2.route);
 
         // call method for removing keyParent elements from alroutesParent
         List<ArrayList<Integer>> newalroutesParent2 = removeSelectedElements(keyParent1, copyParent2);
         List<ArrayList<Integer>> newalroutesParent1 = removeSelectedElements(keyParent2, copyParent1);
 
-//        System.out.println("Modified route list of parents: ");
-//        System.out.println("parent 1: ");
-//        displayRoutes(newalroutesParent1);
-//        System.out.println("parent 2: ");
-//        displayRoutes(newalroutesParent2);
-
-        // insert key for first parent in second new parent
-//        System.out.println("Checking Insertion Validity: Start");
         for (int i : keyParent1) {
             if (i == 0) {
                 continue;
             }
-            boolean flag = false;
-            ArrayList<Chromosome> tmpCandidates = new ArrayList<Chromosome>();
+            ArrayList<Chromosome> tmpCandidates = new ArrayList<>();
             for (int k = 0; k < newalroutesParent2.size(); k++) {
                 //System.out.println("Route k: " + k);
-                Route jroute = newalroutesParent2.get(k);
-                for (int j = 1; j < jroute.route.size(); j++) {
+                List<Integer> jroute = newalroutesParent2.get(k);
+                for (int j = 1; j < jroute.size(); j++) {
                     // get a new copy of this candidate
-                    Candidate tmpCopyCandidate = copyCandidate(copyParent2);
+                    Chromosome tmpCopyCandidate = copyParent2.copy();
                     // insert the i node and check validity
-                    tmpCopyCandidate.routeTable.get(k).route.add(j, i);
-                    //System.out.println(checkInsertionValidity(tmpCopyCandidate.routeTable.get(k)));
-                    if (checkInsertionValidity(tmpCopyCandidate.routeTable.get(k))) {
-                        flag = true;
-                        tmpCopyCandidate.fitness = evaluateFitnessCandidate(tmpCopyCandidate);
-                        //System.out.println(tmpCopyCandidate.fitness);
-                        tmpCandidates.add(tmpCopyCandidate);
-                    }
-                    // if not valid delete this candidate
-                    // if valid calculate fitness
-                    // store this candidate in new arraylist of new candidates
+                    tmpCopyCandidate.getSubRoute(k).add(j, i);
+                    tmpCandidates.add(tmpCopyCandidate);
                 }
             }
             Collections.sort(tmpCandidates);
@@ -242,49 +306,42 @@ public class GAUtils {
             }
         }
 
-        for (int i : keyParent2.route) {
+        for (int i : keyParent2) {
             if (i == 0) {
                 continue;
             }
             boolean flag = false;
-            ArrayList<Candidate> tmpCandidates = new ArrayList<Candidate>();
+            ArrayList<Chromosome> tmpCandidates = new ArrayList<>();
             for (int k = 0; k < newalroutesParent1.size(); k++) {
                 //System.out.println("Route k: " + k);
-                Route jroute = newalroutesParent1.get(k);
-                for (int j = 1; j < jroute.route.size(); j++) {
+                ArrayList<Integer> jroute = newalroutesParent1.get(k);
+                for (int j = 1; j < jroute.size(); j++) {
                     // get a new copy of this candidate
-                    Candidate tmpCopyCandidate = copyCandidate(copyParent1);
+                    Chromosome tmpCopyCandidate = copyParent1.copy();
                     // insert the i node and check validity
-                    tmpCopyCandidate.routeTable.get(k).route.add(j, i);
+                    tmpCopyCandidate.getSubRoute(k).add(j, i);
                     //System.out.println(checkInsertionValidity(tmpCopyCandidate.routeTable.get(k)));
-                    if (checkInsertionValidity(tmpCopyCandidate.routeTable.get(k))) {
-                        flag = true;
-                        tmpCopyCandidate.fitness = evaluateFitnessCandidate(tmpCopyCandidate);
-                        //System.out.println(tmpCopyCandidate.fitness);
-                        tmpCandidates.add(tmpCopyCandidate);
-                    }
-                    // if not valid delete this candidate
-                    // if valid calculate fitness
-                    // store this candidate in new arraylist of new candidates
+
                 }
-            }
-            if (flag == false) {
-                //System.out.println("Hello");
-                copyParent1.routeTable.get(copyParent1.routeTable.size() - 1).route.add(i);
-                copyParent1.fitness = evaluateFitnessCandidate(copyParent1);
-                tmpCandidates.add(copyParent1);
             }
             Collections.sort(tmpCandidates);
             copyParent1 = tmpCandidates.get(0);
         }
+        Chromosome[] children = new Chromosome[2];
+        children[0] = copyParent1;
+        children[1] = copyParent2;
+        children[0].buildTopology();
+        children[1].buildTopology();
+        children[0].calculateDistance();
+        children[1].calculateDistance();
+
+        return children;
     }*/
 
     /* uniform-order crossover (UOX) */
-    public static Chromosome[] UOXcrossover(Chromosome par1, Chromosome par2) {
+    public static Chromosome UOXcrossover(Chromosome par1, Chromosome par2) {
         int len = par1.size();
-        Chromosome[] children = new Chromosome[2];
-        children[0] = new Chromosome(false);
-        children[1] = new Chromosome(false);
+        Chromosome child = new Chromosome(false);
 
         /* 1. generate mask */
         String mask = Parser.generateMask(len);
@@ -293,8 +350,7 @@ public class GAUtils {
         for (int i = 0; i < mask.length(); ++i) {
             char ch = mask.charAt(i);
             if (ch == '1') {
-                children[0].set(i, par1.get(i));
-                children[1].set(i, par2.get(i));
+                child.set(i, par1.get(i));
             }
         }
 
@@ -305,25 +361,13 @@ public class GAUtils {
                 childIdx++;
                 continue;
             }
-            if (!children[1].contains(par1.get(parIdx))) children[1].set(childIdx++, par1.get(parIdx++));
+            if (!child.contains(par1.get(parIdx))) child.set(childIdx++, par1.get(parIdx++));
             else parIdx++;
         }
+        child.buildTopology();
+        child.calculateDistance();
 
-        // copy from second parent to first child
-        for (int parIdx = 0, childIdx = 0; parIdx < len && childIdx < len;) {
-            if (mask.charAt(childIdx) == '1') {
-                childIdx++;
-                continue;
-            }
-            if (!children[0].contains(par2.get(parIdx))) children[0].set(childIdx++, par2.get(parIdx++));
-            else parIdx++;
-        }
-        children[0].buildTopology();
-        children[1].buildTopology();
-        children[0].calculateDistance();
-        children[1].calculateDistance();
-
-        return children;
+        return child;
     }
 
     /* constrained route reversal mutation */

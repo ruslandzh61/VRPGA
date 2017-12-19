@@ -16,8 +16,10 @@ public class ParetoRankingGA {
 
     private static List<Chromosome> nextCandidates;
     private static List<Chromosome> matingPool;
+    private static int crossover;
 
-    public static void init(double aCrossoverRate, int elitism, int aTournamentSize, double aMutationRate) {
+    public static void init(int aCrossover, double aCrossoverRate, int elitism, int aTournamentSize, double aMutationRate) {
+        ParetoRankingGA.crossover = aCrossover;
         ParetoRankingGA.crossoverRate = aCrossoverRate;
         ParetoRankingGA.elitism = elitism;
         ParetoRankingGA.tournamentSize = aTournamentSize;
@@ -49,8 +51,6 @@ public class ParetoRankingGA {
         }
     }
 
-
-
     public static void tournamentRankSelection(Population pop) {
         matingPool = new ArrayList<>();
         for (int i = 0; i < pop.getSize(); i++) {
@@ -65,8 +65,6 @@ public class ParetoRankingGA {
             matingPool.add(fittest);
             //System.out.println("fittest: " + fittest.getFitness());
         }
-
-
     }
 
     private static void crossover() {
@@ -74,7 +72,7 @@ public class ParetoRankingGA {
         nextCandidates = new ArrayList<>();
         int candidateSize = matingPool.size();
 
-        for (int k = 0; k < candidateSize / 2; k++) {
+        for (int k = 0; k < candidateSize; k++) {
             // randomly choose parents from mating pool
             int parent1Index = r.nextInt(candidateSize);
             int parent2Index = r.nextInt(candidateSize);
@@ -87,14 +85,17 @@ public class ParetoRankingGA {
             Chromosome copyParent1 = parent1.copy();
             Chromosome copyParent2 = parent2.copy();
             if (r.nextDouble() < crossoverRate) {
-                Chromosome[] children = GAUtils.UOXcrossover(parent1, parent2);
-                nextCandidates.add(children[0]);
-                nextCandidates.add(children[1]);
+                Chromosome child = crossover(parent1, parent2);
+                nextCandidates.add(child);
             } else {
                 nextCandidates.add(copyParent1);
-                nextCandidates.add(copyParent2);
             }
         }
+    }
+
+    private static Chromosome crossover(Chromosome par1, Chromosome par2) {
+        if (crossover == 1) return GAUtils.UOXcrossover(par1, par2);
+        return GAUtils.partiallyMappedCrossover(par1, par2);
     }
 
     /*private static void crossover() {

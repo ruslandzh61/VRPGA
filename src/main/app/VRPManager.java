@@ -12,9 +12,9 @@ public class VRPManager {
     private static int vehicleCapacity;
     private static double[][] travelTimeMatrix; // computed without vehicle speed
 
-    public static void init(int n, int aVehicleCapacity) {
+    public static void init(int n, int aVehicleCapacity, String filePath) {
         VRPManager.N = n;
-        nodes = Parser.parse("/Users/rusland/Desktop/Fall2017/EC/Projects/Assign_1/data/C101_200.csv", N);
+        nodes = Parser.parse(filePath, N);
         travelTimeMatrix = new double[n][n];
         for (int i = 0; i < n; ++i) {
             for (int j = 0; j < n; ++j) {

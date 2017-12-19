@@ -12,10 +12,12 @@ public class WeightedSumGA {
     private static int elitism; // if elitism is odd number then pick odd population size
     private static int tournamentSize;
     private static double mutationRate;
+    private static int crossover;
 
     private static List<Chromosome> matingPool;
 
-    public static void init(double aCrossoverRate, int elitism, int aTournamentSize, double aMutationRate) {
+    public static void init(int aCrossover, double aCrossoverRate, int elitism, int aTournamentSize, double aMutationRate) {
+        WeightedSumGA.crossover =  aCrossover;
         WeightedSumGA.crossoverRate = aCrossoverRate;
         WeightedSumGA.elitism = elitism;
         WeightedSumGA.tournamentSize = aTournamentSize;
@@ -43,16 +45,25 @@ public class WeightedSumGA {
         for (int i = offset; i < pop.getSize(); i++) {
             matingPool.add(tournamentSelection(pop));
         }
+        int candidateSize = matingPool.size();
 
         // crossover
-        for (int i = offset; i < matingPool.size(); i += 2) {
+        for (int i = offset; i < matingPool.size(); i ++) {
+            // randomly choose parents from mating pool
+            int parent1Index = i;//rnd.nextInt(candidateSize);
+            int parent2Index = i + 1;//rnd.nextInt(candidateSize);
+            if (parent2Index == matingPool.size()) parent2Index = offset;
+            while (parent1Index == parent2Index) {
+                parent2Index = rnd.nextInt(candidateSize);
+            }
+            Chromosome parent1 = matingPool.get(parent1Index);
+            Chromosome parent2 = matingPool.get(parent2Index);
+
             if (rnd.nextDouble() <= crossoverRate) { // recombination
-                Chromosome[] children = crossover(matingPool.get(i), matingPool.get(i + 1));
-                newPop.set(offset++, children[0]);
-                newPop.set(offset++, children[1]);
+                Chromosome child = crossover(parent1, parent2);
+                newPop.set(offset++, child);
             } else {
-                newPop.set(offset++, matingPool.get(i));
-                newPop.set(offset++, matingPool.get(i + 1));
+                newPop.set(offset++, parent1);
             }
         }
 
@@ -64,11 +75,13 @@ public class WeightedSumGA {
         return newPop;
     }
 
-    private static Chromosome[] crossover(Chromosome par1, Chromosome par2) {
-        return GAUtils.UOXcrossover(par1, par2);
+    private static Chromosome crossover(Chromosome par1, Chromosome par2) {
+        if (crossover == 1) {
+            System.out.println("uox");
+            return GAUtils.UOXcrossover(par1, par2);
+        }
+        return GAUtils.partiallyMappedCrossover(par1, par2);
     }
-
-
 
     private static Chromosome tournamentSelection(Population pop) {
         // Create a tournament population
