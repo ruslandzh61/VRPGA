@@ -10,6 +10,16 @@ import java.util.Random;
  * Created by rusland on 18.12.17.
  */
 public class GAUtils {
+    public static double getFitness(Chromosome c) {
+        return getFitness(c.getNumOfRoutes(), c.getDistance());
+    }
+
+    public static double getFitness(double vehicles, double distance) {
+        double alpha = 100;
+        double beta = 0.001;
+        return alpha * vehicles + beta * distance;
+    }
+
     public static void paretoRanking(Population pop) {
         //System.out.println("begin pareto ranking");
         //System.out.println(pop.getSize());

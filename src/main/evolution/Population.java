@@ -8,7 +8,7 @@ import java.util.*;
  * Created by rusland on 05.12.17.
  */
 public class Population {
-    private List<Chromosome> chromosomes;
+    List<Chromosome> chromosomes;
     List<ParetoFrontier> frontiers; // for pareto ranking only
 
     public Population() {
@@ -37,9 +37,12 @@ public class Population {
         }
     }
 
+    public List<Chromosome> getChromosomes() {
+        return chromosomes;
+    }
+
     public Chromosome getFittest() {
         if (chromosomes.size() < 1) {
-            System.out.println("ERROR null");
             return null;
         }
         Chromosome fittest;

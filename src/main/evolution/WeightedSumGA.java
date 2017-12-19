@@ -39,7 +39,6 @@ public class WeightedSumGA {
         }
 
         Random rnd = new Random();
-        System.out.println(newPop);
         // selecting mating pool
         for (int i = offset; i < pop.getSize(); i++) {
             matingPool.add(tournamentSelection(pop));

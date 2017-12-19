@@ -212,21 +212,3 @@ public class ParetoRankingGA {
     }*/
 }
 
-class ParetoFrontier {
-    ArrayList<Chromosome> rank;
-
-    void add(Chromosome c) {
-        rank.add(c);
-    }
-
-    int size() {
-        return rank.size();
-    }
-
-    /*@Override
-    public String toString() {
-        String res = "";
-        for (int i = 0; i < 10)
-    }*/
-}
-
